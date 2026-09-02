@@ -1,0 +1,1591 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/heteraff1-tech/product-discovery-04-hypothesis-builder/blob/main/schemas/output.schema.json",
+  "title": "Hypothesis Builder Output",
+  "description": "Контракт GPT4 с verbatim GPT3 intake, typed evidence links, status-safe hypotheses и versioned evidence handoff.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_mode",
+    "skills_used",
+    "summary",
+    "upstream_intake",
+    "evidence_context",
+    "missing_inputs",
+    "jtbd_frames",
+    "opportunity_solution_tree",
+    "hypotheses",
+    "revision_log",
+    "limitations",
+    "handoff"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2.0.0"
+    },
+    "run_mode": {
+      "type": "string",
+      "enum": ["start", "correct"]
+    },
+    "skills_used": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "hypothesis-framing",
+          "opportunity-solution-tree",
+          "jtbd-framing",
+          "experiment-design"
+        ]
+      }
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "upstream_intake": {
+      "$ref": "#/$defs/upstreamIntake"
+    },
+    "evidence_context": {
+      "$ref": "#/$defs/evidenceContext"
+    },
+    "missing_inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/missingInput"
+      }
+    },
+    "jtbd_frames": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/jtbdFrame"
+      }
+    },
+    "opportunity_solution_tree": {
+      "$ref": "#/$defs/opportunitySolutionTree"
+    },
+    "hypotheses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/hypothesis"
+      }
+    },
+    "revision_log": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/revisionEntry"
+      }
+    },
+    "limitations": {
+      "$ref": "#/$defs/stringArray"
+    },
+    "handoff": {
+      "$ref": "#/$defs/handoff"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "run_mode": {
+            "const": "correct"
+          }
+        },
+        "required": ["run_mode"]
+      },
+      "then": {
+        "properties": {
+          "revision_log": {
+            "minItems": 1
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "revision_log": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nullableId": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "idArray": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/id"
+      }
+    },
+    "nonEmptyIdArray": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/id"
+      }
+    },
+    "stringArray": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "nullableString": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "nullableNumber": {
+      "type": ["number", "null"]
+    },
+    "confidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "rationale"],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "unknown"]
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "upstreamProblem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "problem_id",
+        "problem_id_origin",
+        "statement",
+        "evidence_for_refs",
+        "evidence_against_refs"
+      ],
+      "properties": {
+        "problem_id": {
+          "$ref": "#/$defs/id"
+        },
+        "problem_id_origin": {
+          "$ref": "#/$defs/nullableString",
+          "description": "Verbatim value from GPT3 provenance.problem_id_origin."
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_for_refs": {
+          "$ref": "#/$defs/idArray"
+        },
+        "evidence_against_refs": {
+          "$ref": "#/$defs/idArray"
+        }
+      }
+    },
+    "upstreamCause": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cause_id",
+        "hypothesis",
+        "mechanism",
+        "cause_level",
+        "causal_status",
+        "causal_basis_ref",
+        "evidence_for_refs",
+        "evidence_against_refs",
+        "possible_confounders",
+        "assumptions",
+        "confidence"
+      ],
+      "properties": {
+        "cause_id": {
+          "$ref": "#/$defs/id"
+        },
+        "hypothesis": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mechanism": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cause_level": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "causal_status": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Upstream value; сохраняется без локальной нормализации."
+        },
+        "causal_basis_ref": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "evidence_for_refs": {
+          "$ref": "#/$defs/idArray"
+        },
+        "evidence_against_refs": {
+          "$ref": "#/$defs/idArray"
+        },
+        "possible_confounders": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "assumptions": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "confidence": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/confidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "upstreamIntake": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_agent",
+        "source_schema_version",
+        "source_generated_at",
+        "adapter_status",
+        "analysis_id",
+        "problems",
+        "causes",
+        "causal_basis",
+        "missing_fields",
+        "adaptation_notes"
+      ],
+      "properties": {
+        "source_agent": {
+          "const": "product-discovery-03-root-cause-analyst"
+        },
+        "source_schema_version": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "source_generated_at": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "adapter_status": {
+          "type": "string",
+          "enum": ["complete", "incomplete"]
+        },
+        "analysis_id": {
+          "$ref": "#/$defs/nullableId"
+        },
+        "problems": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/upstreamProblem"
+          }
+        },
+        "causes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/upstreamCause"
+          }
+        },
+        "causal_basis": {
+          "type": ["object", "null"],
+          "description": "Полный upstream object без переименования полей или значений."
+        },
+        "missing_fields": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "adaptation_notes": {
+          "$ref": "#/$defs/stringArray"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "adapter_status": {
+                "const": "complete"
+              }
+            },
+            "required": ["adapter_status"]
+          },
+          "then": {
+            "properties": {
+              "source_schema_version": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source_generated_at": {
+                "type": "string",
+                "minLength": 1
+              },
+              "analysis_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "problems": {
+                "minItems": 1
+              },
+              "missing_fields": {
+                "maxItems": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "missing_fields": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidenceRegistryEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "kind",
+        "observation",
+        "source_refs",
+        "locator",
+        "scope",
+        "reliability",
+        "limitations"
+      ],
+      "properties": {
+        "evidence_id": {
+          "$ref": "#/$defs/id"
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_refs": {
+          "$ref": "#/$defs/idArray"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": ["object", "null"]
+        },
+        "reliability": {
+          "type": "string",
+          "minLength": 1
+        },
+        "limitations": {
+          "$ref": "#/$defs/stringArray"
+        }
+      }
+    },
+    "registryRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "registry_id",
+        "version",
+        "analysis_id",
+        "uri",
+        "content_hash"
+      ],
+      "properties": {
+        "registry_id": {
+          "$ref": "#/$defs/id"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "analysis_id": {
+          "$ref": "#/$defs/id"
+        },
+        "uri": {
+          "type": "string",
+          "minLength": 1
+        },
+        "content_hash": {
+          "$ref": "#/$defs/nullableString"
+        }
+      }
+    },
+    "evidenceContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "registry_id",
+        "version",
+        "analysis_id",
+        "evidence_registry",
+        "evidence_registry_ref"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["embedded", "reference", "unavailable"]
+        },
+        "registry_id": {
+          "$ref": "#/$defs/nullableId"
+        },
+        "version": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "analysis_id": {
+          "$ref": "#/$defs/nullableId"
+        },
+        "evidence_registry": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/evidenceRegistryEntry"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_registry_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/registryRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "embedded"
+              }
+            },
+            "required": ["mode"]
+          },
+          "then": {
+            "properties": {
+              "registry_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1
+              },
+              "analysis_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_registry": {
+                "type": "array"
+              },
+              "evidence_registry_ref": {
+                "$ref": "#/$defs/registryRef"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "reference"
+              }
+            },
+            "required": ["mode"]
+          },
+          "then": {
+            "properties": {
+              "registry_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1
+              },
+              "analysis_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_registry": {
+                "type": "null"
+              },
+              "evidence_registry_ref": {
+                "$ref": "#/$defs/registryRef"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "unavailable"
+              }
+            },
+            "required": ["mode"]
+          },
+          "then": {
+            "properties": {
+              "evidence_registry": {
+                "type": "null"
+              },
+              "evidence_registry_ref": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidenceLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_id", "supports", "stance", "claim_ref", "note"],
+      "properties": {
+        "evidence_id": {
+          "$ref": "#/$defs/id"
+        },
+        "supports": {
+          "type": "string",
+          "enum": ["problem", "mechanism", "baseline", "expected_effect"]
+        },
+        "stance": {
+          "type": "string",
+          "enum": ["supports", "contradicts", "context_only"]
+        },
+        "claim_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "evidenceLinks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidenceLink"
+      }
+    },
+    "missingInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "reason", "impact", "resolution"],
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "impact": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resolution": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "jtbdFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jtbd_id",
+        "status",
+        "target_segment",
+        "situation",
+        "motivation",
+        "desired_progress",
+        "job_statement",
+        "functional_job",
+        "emotional_job",
+        "social_job",
+        "current_alternatives",
+        "evidence_links",
+        "open_questions"
+      ],
+      "properties": {
+        "jtbd_id": {
+          "$ref": "#/$defs/id"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["evidence_backed", "assumption"]
+        },
+        "target_segment": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "situation": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "motivation": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "desired_progress": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "job_statement": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "functional_job": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "emotional_job": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "social_job": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "current_alternatives": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "evidence_links": {
+          "$ref": "#/$defs/evidenceLinks"
+        },
+        "open_questions": {
+          "$ref": "#/$defs/stringArray"
+        }
+      }
+    },
+    "solutionCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "solution_candidate_id",
+        "statement",
+        "assumption_ids",
+        "hypothesis_ids"
+      ],
+      "properties": {
+        "solution_candidate_id": {
+          "$ref": "#/$defs/id"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assumption_ids": {
+          "$ref": "#/$defs/idArray"
+        },
+        "hypothesis_ids": {
+          "$ref": "#/$defs/idArray"
+        }
+      }
+    },
+    "opportunity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "opportunity_id",
+        "status",
+        "statement",
+        "evidence_links",
+        "jtbd_ids",
+        "solution_candidates"
+      ],
+      "properties": {
+        "opportunity_id": {
+          "$ref": "#/$defs/id"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["evidence_backed", "assumption"]
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_links": {
+          "$ref": "#/$defs/evidenceLinks"
+        },
+        "jtbd_ids": {
+          "$ref": "#/$defs/idArray"
+        },
+        "solution_candidates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/solutionCandidate"
+          }
+        }
+      }
+    },
+    "opportunitySolutionTree": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["desired_outcome", "outcome_metric", "opportunities"],
+      "properties": {
+        "desired_outcome": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outcome_metric": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "opportunities": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/opportunity"
+          }
+        }
+      }
+    },
+    "assumption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assumption_id",
+        "statement",
+        "type",
+        "risk_level",
+        "validation_status",
+        "evidence_links"
+      ],
+      "properties": {
+        "assumption_id": {
+          "$ref": "#/$defs/id"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "desirability",
+            "usability",
+            "feasibility",
+            "viability",
+            "measurement",
+            "causal"
+          ]
+        },
+        "risk_level": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        },
+        "validation_status": {
+          "type": "string",
+          "enum": ["untested", "partially_supported", "supported", "refuted"]
+        },
+        "evidence_links": {
+          "$ref": "#/$defs/evidenceLinks"
+        }
+      }
+    },
+    "primaryMetric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "definition",
+        "event_or_formula",
+        "direction",
+        "baseline",
+        "target",
+        "unit",
+        "measurement_window",
+        "data_source"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "definition": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "event_or_formula": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "direction": {
+          "type": ["string", "null"],
+          "enum": ["increase", "decrease", "maintain", null]
+        },
+        "baseline": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "target": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "unit": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "measurement_window": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "data_source": {
+          "$ref": "#/$defs/nullableString"
+        }
+      }
+    },
+    "guardrail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "definition",
+        "direction",
+        "threshold",
+        "unit",
+        "measurement_window",
+        "breach_action"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "definition": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "direction": {
+          "type": ["string", "null"],
+          "enum": ["not_increase", "not_decrease", "stay_within", null]
+        },
+        "threshold": {
+          "type": ["number", "string", "null"]
+        },
+        "unit": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "measurement_window": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "breach_action": {
+          "$ref": "#/$defs/nullableString"
+        }
+      }
+    },
+    "effectRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max", "unit"],
+      "properties": {
+        "min": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "max": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "unit": {
+          "$ref": "#/$defs/nullableString"
+        }
+      }
+    },
+    "expectedEffect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["direction", "range", "basis", "rationale"],
+      "properties": {
+        "direction": {
+          "type": ["string", "null"],
+          "enum": ["increase", "decrease", "maintain", null]
+        },
+        "range": {
+          "$ref": "#/$defs/effectRange"
+        },
+        "basis": {
+          "type": "string",
+          "enum": [
+            "observed_baseline",
+            "historical_data",
+            "benchmark",
+            "calculation",
+            "user_input",
+            "assumption",
+            "unknown"
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "basis": {
+                "const": "unknown"
+              }
+            },
+            "required": ["basis"]
+          },
+          "then": {
+            "properties": {
+              "range": {
+                "properties": {
+                  "min": {
+                    "type": "null"
+                  },
+                  "max": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "duration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit", "rationale"],
+      "properties": {
+        "value": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "unit": {
+          "type": ["string", "null"],
+          "enum": ["hours", "days", "weeks", "sessions", null]
+        },
+        "rationale": {
+          "$ref": "#/$defs/nullableString"
+        }
+      }
+    },
+    "sampleSize": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "per_variant", "basis"],
+      "properties": {
+        "total": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "per_variant": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "basis": {
+          "$ref": "#/$defs/nullableString"
+        }
+      }
+    },
+    "statisticalParameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["alpha", "power", "minimum_detectable_effect"],
+      "properties": {
+        "alpha": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "power": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "minimum_detectable_effect": {
+          "$ref": "#/$defs/nullableNumber"
+        }
+      }
+    },
+    "test": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "test_id",
+        "method",
+        "riskiest_assumption_ids",
+        "design",
+        "population",
+        "recruitment_criteria",
+        "control",
+        "treatment",
+        "allocation",
+        "instrumentation",
+        "duration",
+        "sample_size",
+        "statistical_parameters",
+        "success_criteria",
+        "falsification_criteria",
+        "stop_conditions",
+        "analysis_plan",
+        "limitations"
+      ],
+      "properties": {
+        "test_id": {
+          "$ref": "#/$defs/id"
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "ab_test",
+            "prototype_test",
+            "fake_door",
+            "concierge",
+            "usability_test",
+            "interview",
+            "cohort_analysis",
+            "quasi_experiment",
+            "other"
+          ]
+        },
+        "riskiest_assumption_ids": {
+          "$ref": "#/$defs/idArray"
+        },
+        "design": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "population": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "recruitment_criteria": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "control": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "treatment": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "allocation": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "instrumentation": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "duration": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/duration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sample_size": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sampleSize"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "statistical_parameters": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/statisticalParameters"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "success_criteria": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "falsification_criteria": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "stop_conditions": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "analysis_plan": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "limitations": {
+          "$ref": "#/$defs/stringArray"
+        }
+      }
+    },
+    "readinessChecks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lineage_complete",
+        "evidence_resolvable",
+        "framing_complete",
+        "primary_metric_defined",
+        "guardrails_defined",
+        "method_requirements_met",
+        "instrumentation_available",
+        "population_access_confirmed"
+      ],
+      "properties": {
+        "lineage_complete": {
+          "$ref": "#/$defs/checkResult"
+        },
+        "evidence_resolvable": {
+          "$ref": "#/$defs/checkResult"
+        },
+        "framing_complete": {
+          "$ref": "#/$defs/checkResult"
+        },
+        "primary_metric_defined": {
+          "$ref": "#/$defs/checkResult"
+        },
+        "guardrails_defined": {
+          "$ref": "#/$defs/checkResult"
+        },
+        "method_requirements_met": {
+          "$ref": "#/$defs/checkResult"
+        },
+        "instrumentation_available": {
+          "$ref": "#/$defs/checkResult"
+        },
+        "population_access_confirmed": {
+          "$ref": "#/$defs/checkResult"
+        }
+      }
+    },
+    "checkResult": {
+      "type": "string",
+      "enum": ["pass", "fail", "not_assessed"]
+    },
+    "allChecksPass": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lineage_complete",
+        "evidence_resolvable",
+        "framing_complete",
+        "primary_metric_defined",
+        "guardrails_defined",
+        "method_requirements_met",
+        "instrumentation_available",
+        "population_access_confirmed"
+      ],
+      "properties": {
+        "lineage_complete": {
+          "const": "pass"
+        },
+        "evidence_resolvable": {
+          "const": "pass"
+        },
+        "framing_complete": {
+          "const": "pass"
+        },
+        "primary_metric_defined": {
+          "const": "pass"
+        },
+        "guardrails_defined": {
+          "const": "pass"
+        },
+        "method_requirements_met": {
+          "const": "pass"
+        },
+        "instrumentation_available": {
+          "const": "pass"
+        },
+        "population_access_confirmed": {
+          "const": "pass"
+        }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ready", "checks", "blocking_reasons"],
+      "properties": {
+        "ready": {
+          "type": "boolean"
+        },
+        "checks": {
+          "$ref": "#/$defs/readinessChecks"
+        },
+        "blocking_reasons": {
+          "$ref": "#/$defs/stringArray"
+        }
+      }
+    },
+    "hypothesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hypothesis_id",
+        "previous_hypothesis_id",
+        "status",
+        "problem_ids",
+        "cause_ids",
+        "opportunity_ids",
+        "jtbd_ids",
+        "target_segment",
+        "if",
+        "then",
+        "because",
+        "evidence_links",
+        "alternative_explanations",
+        "assumptions",
+        "falsification_condition",
+        "primary_metric",
+        "guardrails",
+        "expected_effect",
+        "test",
+        "confidence",
+        "readiness",
+        "rejection_reason"
+      ],
+      "properties": {
+        "hypothesis_id": {
+          "$ref": "#/$defs/id"
+        },
+        "previous_hypothesis_id": {
+          "$ref": "#/$defs/nullableId"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["candidate", "ready_to_test", "blocked", "rejected"]
+        },
+        "problem_ids": {
+          "$ref": "#/$defs/idArray"
+        },
+        "cause_ids": {
+          "$ref": "#/$defs/idArray"
+        },
+        "opportunity_ids": {
+          "$ref": "#/$defs/idArray"
+        },
+        "jtbd_ids": {
+          "$ref": "#/$defs/idArray"
+        },
+        "target_segment": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "if": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "then": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "because": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "evidence_links": {
+          "$ref": "#/$defs/evidenceLinks"
+        },
+        "alternative_explanations": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/assumption"
+          }
+        },
+        "falsification_condition": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "primary_metric": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/primaryMetric"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "guardrails": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/guardrail"
+          }
+        },
+        "expected_effect": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/expectedEffect"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "test": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/test"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confidence": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/confidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "readiness": {
+          "$ref": "#/$defs/readiness"
+        },
+        "rejection_reason": {
+          "$ref": "#/$defs/nullableString"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "ready_to_test"
+              }
+            },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "problem_ids": {
+                "minItems": 1
+              },
+              "target_segment": {
+                "type": "string",
+                "minLength": 1
+              },
+              "if": {
+                "type": "string",
+                "minLength": 1
+              },
+              "then": {
+                "type": "string",
+                "minLength": 1
+              },
+              "because": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_links": {
+                "minItems": 1
+              },
+              "assumptions": {
+                "minItems": 1
+              },
+              "falsification_condition": {
+                "type": "string",
+                "minLength": 1
+              },
+              "primary_metric": {
+                "$ref": "#/$defs/primaryMetric"
+              },
+              "guardrails": {
+                "minItems": 1
+              },
+              "expected_effect": {
+                "$ref": "#/$defs/expectedEffect"
+              },
+              "test": {
+                "$ref": "#/$defs/test"
+              },
+              "confidence": {
+                "$ref": "#/$defs/confidence"
+              },
+              "readiness": {
+                "properties": {
+                  "ready": {
+                    "const": true
+                  },
+                  "checks": {
+                    "$ref": "#/$defs/allChecksPass"
+                  },
+                  "blocking_reasons": {
+                    "maxItems": 0
+                  }
+                }
+              },
+              "rejection_reason": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "blocked"
+              }
+            },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "readiness": {
+                "properties": {
+                  "ready": {
+                    "const": false
+                  },
+                  "blocking_reasons": {
+                    "minItems": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "rejected"
+              }
+            },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "readiness": {
+                "properties": {
+                  "ready": {
+                    "const": false
+                  }
+                }
+              },
+              "rejection_reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "candidate"
+              }
+            },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "readiness": {
+                "properties": {
+                  "ready": {
+                    "const": false
+                  }
+                }
+              },
+              "rejection_reason": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "revisionEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "audit_outcome",
+        "previous_hypothesis_id",
+        "resulting_hypothesis_id",
+        "issues_found",
+        "changes_made",
+        "reason",
+        "preserved_evidence_refs"
+      ],
+      "properties": {
+        "audit_outcome": {
+          "type": "string",
+          "enum": ["no_change", "changed", "blocked", "rejected", "superseded"]
+        },
+        "previous_hypothesis_id": {
+          "$ref": "#/$defs/id"
+        },
+        "resulting_hypothesis_id": {
+          "$ref": "#/$defs/id"
+        },
+        "issues_found": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "changes_made": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "preserved_evidence_refs": {
+          "$ref": "#/$defs/idArray"
+        }
+      }
+    },
+    "handoff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "analysis_id",
+        "evidence_registry_ref",
+        "ready_hypothesis_ids",
+        "candidate_hypothesis_ids",
+        "blocked_hypothesis_ids",
+        "rejected_hypothesis_ids",
+        "decision_notes"
+      ],
+      "properties": {
+        "analysis_id": {
+          "$ref": "#/$defs/nullableId"
+        },
+        "evidence_registry_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/registryRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ready_hypothesis_ids": {
+          "$ref": "#/$defs/idArray"
+        },
+        "candidate_hypothesis_ids": {
+          "$ref": "#/$defs/idArray"
+        },
+        "blocked_hypothesis_ids": {
+          "$ref": "#/$defs/idArray"
+        },
+        "rejected_hypothesis_ids": {
+          "$ref": "#/$defs/idArray"
+        },
+        "decision_notes": {
+          "$ref": "#/$defs/stringArray"
+        }
+      }
+    }
+  }
+}
